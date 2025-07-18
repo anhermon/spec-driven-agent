@@ -14,7 +14,19 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from ..core import SpecDrivenContextEngine, SpecDrivenWorkflowOrchestrator
+# Models
 from ..models.project import Project, ProjectStatus
+from ..models.workflow import WorkflowPhase, WorkflowState
+
+# Local persistence helpers
+from .project_store import (
+    save_project,
+    load_project,
+    list_projects as _list_projects,
+    delete_project as _delete_project,
+)
+
+from .workflow_store import save_workflow, load_workflow
 
 console = Console()
 
@@ -32,30 +44,36 @@ def app():
     pass
 
 
-@app.command()
+# ---------------------------------------------------------------------------
+# Project Command Group
+# ---------------------------------------------------------------------------
+
+
+@app.group(name="project")
+def project():
+    """Project management commands."""
+    pass
+
+
+# ---- project create -------------------------------------------------------
+
+
+@project.command("create")
 @click.option("--name", required=True, help="Project name")
 @click.option("--description", required=True, help="Project description")
-@click.option(
-    "--slug", help="URL-friendly project identifier (auto-generated if not provided)"
-)
-@click.option(
-    "--output", "-o", type=click.Path(), help="Output directory for project files"
-)
-def create(name: str, description: str, slug: Optional[str], output: Optional[str]):
-    """Create a new spec-driven project."""
+# py>=3.10 supports PEP604 but keep Optional for broader compatibility
+@click.option("--slug", help="URL-friendly project identifier (auto-generated if not provided)")
+def project_create(name: str, description: str, slug: Optional[str]):
+    """Create a new project and persist it locally."""
 
     if not slug:
         slug = name.lower().replace(" ", "-").replace("_", "-")
 
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        console=console,
-    ) as progress:
+    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
         task = progress.add_task("Creating project...", total=None)
 
         try:
-            # Create project
+            # Build project object
             project = Project(
                 name=name,
                 slug=slug,
@@ -63,30 +81,203 @@ def create(name: str, description: str, slug: Optional[str], output: Optional[st
                 status=ProjectStatus.DRAFT,
             )
 
-            # Initialize context engine
+            # Initialize context engine & workflow orchestrator
             context_engine = SpecDrivenContextEngine()
-
-            # Create context
-            context = asyncio.run(context_engine.create_context(project))
-
-            # Initialize workflow orchestrator
             workflow_orchestrator = SpecDrivenWorkflowOrchestrator()
 
-            # Start workflow
+            # Create context and start workflow in parallel
+            context = asyncio.run(context_engine.create_context(project))
             workflow = asyncio.run(workflow_orchestrator.start_workflow(project))
+
+            progress.update(task, description="Persisting project ...")
+
+            # Persist project (with workflow/context ids captured in extra)
+            save_project(project, extra={"context_id": str(context.id), "workflow_id": str(workflow.id)})
 
             progress.update(task, description="Project created successfully!")
 
-            # Display project info
             display_project_info(project, context, workflow)
 
-            # Save project files if output directory specified
-            if output:
-                save_project_files(project, context, workflow, Path(output))
-
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             console.print(f"[red]Error creating project: {e}[/red]")
             sys.exit(1)
+
+
+# ---- project list ---------------------------------------------------------
+
+
+@project.command("list")
+@click.option("--json", "json_output", is_flag=True, help="Output raw JSON instead of a table")
+def project_list(json_output: bool):
+    """List all stored projects."""
+
+    projects = _list_projects()
+    if json_output:
+        console.print(json.dumps([p.model_dump(mode="json") for p in projects], indent=2))
+        return
+
+    table = Table(title="Projects")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name", style="green")
+    table.add_column("Status", style="magenta")
+    table.add_column("Description", style="white")
+
+    for p in projects:
+        table.add_row(str(p.id), p.name, p.status, p.description)
+
+    console.print(table)
+
+
+# ---- project show ---------------------------------------------------------
+
+
+@project.command("show")
+@click.argument("project_id")
+def project_show(project_id: str):
+    """Display details for a single project."""
+
+    project = load_project(project_id)
+    if not project:
+        console.print(f"[red]Project {project_id} not found[/red]")
+        sys.exit(1)
+
+    console.print(json.dumps(project.model_dump(mode="json"), indent=2))
+
+
+# ---- project delete -------------------------------------------------------
+
+
+@project.command("delete")
+@click.argument("project_id")
+@click.option("--yes", is_flag=True, help="Skip confirmation prompt")
+def project_delete(project_id: str, yes: bool):
+    """Delete a stored project."""
+
+    if not yes and not click.confirm(f"Delete project {project_id}?", default=False):
+        console.print("[yellow]Aborted[/yellow]")
+        return
+
+    if _delete_project(project_id):
+        console.print(f"[green]Project {project_id} deleted.[/green]")
+    else:
+        console.print(f"[red]Failed to delete project {project_id}.[/red]")
+
+
+# ---- project status -------------------------------------------------------
+
+
+@project.command("status")
+@click.argument("project_id")
+def project_status(project_id: str):
+    """Alias for `status` command (legacy)."""
+    status(project_id)
+
+
+# ---------------------------------------------------------------------------
+# Workflow Command Group
+# ---------------------------------------------------------------------------
+
+
+@app.group(name="workflow")
+def workflow():
+    """Workflow management commands."""
+    pass
+
+
+# ---- workflow start -------------------------------------------------------
+
+
+@workflow.command("start")
+@click.argument("project_id")
+def workflow_start(project_id: str):
+    """Start a workflow for an existing project."""
+
+    project = load_project(project_id)
+    if not project:
+        console.print(f"[red]Project {project_id} not found.[/red]")
+        sys.exit(1)
+
+    orchestrator = SpecDrivenWorkflowOrchestrator()
+    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+        task = progress.add_task("Starting workflow...", total=None)
+        try:
+            workflow = asyncio.run(orchestrator.start_workflow(project))
+
+            # Persist workflow
+            save_workflow(workflow)
+
+            # Update project extra metadata with new workflow id
+            save_project(project, extra={"context_id": str(project.context_id), "workflow_id": str(workflow.id)})
+
+            progress.update(task, description="Workflow started!")
+            console.print(json.dumps(workflow.model_dump(mode="json"), indent=2))
+        except Exception as e:  # noqa: BLE001
+            console.print(f"[red]Error starting workflow: {e}[/red]")
+            sys.exit(1)
+
+
+# ---- workflow status ------------------------------------------------------
+
+
+@workflow.command("status")
+@click.argument("workflow_id")
+def workflow_status(workflow_id: str):
+    """Display workflow status."""
+
+    workflow = load_workflow(workflow_id)
+    if not workflow:
+        console.print(f"[red]Workflow {workflow_id} not found.[/red]")
+        sys.exit(1)
+
+    console.print(json.dumps(workflow.model_dump(mode="json"), indent=2))
+
+
+# ---- workflow advance -----------------------------------------------------
+
+
+@workflow.command("advance")
+@click.argument("workflow_id")
+@click.option("--phase", "target_phase", required=True, help="Target phase to transition to (e.g., DEVELOPMENT)")
+def workflow_advance(workflow_id: str, target_phase: str):
+    """Advance workflow to a given phase."""
+
+    workflow = load_workflow(workflow_id)
+    if not workflow:
+        console.print(f"[red]Workflow {workflow_id} not found.[/red]")
+        sys.exit(1)
+
+    try:
+        phase_enum = getattr(WorkflowPhase, target_phase.upper(), None)
+        if phase_enum is None:
+            console.print(f"[red]Invalid phase: {target_phase}[/red]")
+            sys.exit(1)
+
+        orchestrator = SpecDrivenWorkflowOrchestrator()
+        orchestrator.workflows[workflow.id] = workflow
+        # Create a minimal state if missing
+        if workflow.state_id is None or workflow.id not in orchestrator.workflow_states:
+            from uuid import uuid4
+
+            orchestrator.workflow_states[workflow.id] = WorkflowState(
+                id=workflow.state_id or uuid4(),
+                name="Restored State",
+                description="State restored from CLI persistence",
+                status="active",
+                workflow_id=workflow.id,
+                current_phase=workflow.current_phase,
+            )
+
+        # Transition via orchestrator to leverage validation logic
+        workflow = asyncio.run(
+            orchestrator.transition_to_phase(workflow.id, phase_enum, "cli advance")
+        )
+
+        save_workflow(workflow)
+        console.print("[green]Workflow advanced![/green]")
+        console.print(json.dumps(workflow.model_dump(mode="json"), indent=2))
+    except Exception as e:  # noqa: BLE001
+        console.print(f"[red]Error advancing workflow: {e}[/red]")
+        sys.exit(1)
 
 
 @app.command()
