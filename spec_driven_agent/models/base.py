@@ -22,6 +22,34 @@ class BaseModel(PydanticBaseModel):
         },
     )
 
+    # ---------------------------------------------------------------------
+    # Pydantic v2 compatibility helpers
+    # ---------------------------------------------------------------------
+    # The codebase (especially the tests) was originally written targeting
+    # Pydantic v2 which introduced the ``model_dump``, ``model_copy`` and
+    # ``model_validate`` APIs.  Since we currently rely on Pydantic v1 for
+    # Python 3.13 compatibility, we expose shim implementations that delegate
+    # to the equivalent v1 helpers so the public surface expected by the tests
+    # remains available.
+
+    def model_dump(self, *args, **kwargs):  # type: ignore[override]
+        """Alias for :py:meth:`dict` with identical semantics in v1."""
+
+        # ``dict`` in v1 supports nearly the same signature as v2's
+        # ``model_dump`` so we just forward the arguments verbatim.
+        return self.dict(*args, **kwargs)
+
+    def model_copy(self, *args, **kwargs):  # type: ignore[override]
+        """Alias for :py:meth:`copy` with identical semantics in v1."""
+
+        return self.copy(*args, **kwargs)
+
+    @classmethod
+    def model_validate(cls, data, *args, **kwargs):  # type: ignore[override]
+        """Alias for :py:meth:`parse_obj` to mimic v2 API."""
+
+        return cls.parse_obj(data)
+
 
 class TimestampedModel(BaseModel):
     """Base model with timestamp fields."""

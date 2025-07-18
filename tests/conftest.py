@@ -1,6 +1,41 @@
 """
 Pytest configuration and shared fixtures for spec-driven-agent tests.
+
+This module is imported by Pytest *before* any test modules are collected.
+Here we apply a small monkey-patch that makes Pydantic v1 work on Python 3.13
+by adapting the changed private ``typing.ForwardRef._evaluate`` signature.
+The patch is completely self-contained and safe to apply multiple times.
 """
+
+from __future__ import annotations
+
+# ---------------------------------------------------------------------------
+# Compatibility shim – Pydantic v1 vs Python 3.13
+# ---------------------------------------------------------------------------
+# Python 3.13 added a new required ``recursive_guard`` kw-only argument to
+# ``typing.ForwardRef._evaluate``.  Older versions of Pydantic (<=1.10) still
+# invoke this private method with the legacy positional signature which now
+# raises ``TypeError`` at import time (e.g. when FastAPI defines its OpenAPI
+# models).  We solve this once for the entire test session by wrapping the
+# method and injecting the missing argument when absent.
+
+import typing as _typing
+
+
+_orig_fr_evaluate = _typing.ForwardRef._evaluate  # type: ignore[attr-defined]
+
+
+def _forwardref_eval_shim(self: _typing.ForwardRef, globalns, localns, *args, **kwargs):  # type: ignore[override]
+    if "recursive_guard" not in kwargs:
+        kwargs["recursive_guard"] = set()
+    return _orig_fr_evaluate(self, globalns, localns, *args, **kwargs)
+
+
+_typing.ForwardRef._evaluate = _forwardref_eval_shim  # type: ignore[attr-defined]
+
+# ---------------------------------------------------------------------------
+# Fixtures (existing content continues below)
+# ---------------------------------------------------------------------------
 
 import asyncio
 from typing import Any, Dict, List
