@@ -11,6 +11,37 @@ from pydantic import Field
 from .base import StatusModel
 
 
+class AgentContext(StatusModel):
+    """Represents the context for an individual agent."""
+    
+    agent_id: str = Field(..., description="Agent identifier")
+    context_id: UUID = Field(..., description="Unique context identifier")
+    
+    # Agent-specific data
+    agent_data: Dict[str, Any] = Field(default_factory=dict, description="Agent-specific data")
+    agent_state: Dict[str, Any] = Field(default_factory=dict, description="Agent state information")
+    
+    # Project context reference
+    project_context_id: Optional[UUID] = Field(None, description="Reference to project context")
+    
+    # Communication context
+    message_history: List[Dict[str, Any]] = Field(default_factory=list, description="Message history")
+    active_conversations: List[str] = Field(default_factory=list, description="Active conversation IDs")
+    
+    # Task context
+    current_task_id: Optional[str] = Field(None, description="Current task ID")
+    task_history: List[str] = Field(default_factory=list, description="Task history")
+    
+    # Performance and monitoring
+    last_activity: datetime = Field(default_factory=datetime.utcnow, description="Last activity time")
+    activity_count: int = Field(default=0, description="Activity count")
+    
+    class Config:
+        """Pydantic configuration."""
+        
+        validate_assignment = True
+
+
 class SymbolicReference(StatusModel):
     """Represents a symbolic reference to data in the context."""
     
