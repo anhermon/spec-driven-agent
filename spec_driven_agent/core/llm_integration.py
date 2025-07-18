@@ -3,6 +3,7 @@ LLM integration for the spec-driven agent workflow system.
 """
 
 import os
+import asyncio
 from typing import Any, Dict, Optional
 
 import httpx
@@ -25,10 +26,10 @@ class LLMIntegration:
     """LLM integration using LiteLLM proxy."""
 
     def __init__(self):
-        self.base_url = os.getenv("LITELLM_PROXY_URL", "http://10.250.0.17:4000/")
-        self.api_key = os.getenv("LITELLM_API_KEY", "")
+        self.base_url = os.environ.get("LITELLM_PROXY_URL", "http://10.250.0.17:4000/")
+        self.api_key = os.environ.get("LITELLM_API_KEY", "")
 
-        if not self.api_key:
+        if "LITELLM_API_KEY" not in os.environ or not self.api_key:
             raise LLMIntegrationError(
                 "LITELLM_API_KEY not found in environment variables"
             )
@@ -50,12 +51,14 @@ class LLMIntegration:
         """Test connection to the LLM provider."""
         try:
             response = await self.client.get("health")
-            response.raise_for_status()
+            # Support both sync and async mocks
+            await _maybe_await(response.raise_for_status())
+            data = await _maybe_await(response.json())
             return {
                 "status": "connected",
                 "provider": "LiteLLM Proxy",
                 "base_url": self.base_url,
-                "response": response.json(),
+                "response": data,
             }
         except httpx.HTTPStatusError as e:
             raise LLMIntegrationError(
@@ -90,8 +93,8 @@ class LLMIntegration:
 
         try:
             response = await self.client.post("v1/chat/completions", json=payload)
-            response.raise_for_status()
-            result = response.json()
+            await _maybe_await(response.raise_for_status())
+            result = await _maybe_await(response.json())
 
             return {
                 "text": result["choices"][0]["message"]["content"],
@@ -266,5 +269,18 @@ async def close_llm_integration():
     """Close the global LLM integration instance."""
     global _llm_integration
     if _llm_integration is not None:
-        await _llm_integration.close()
+        if hasattr(_llm_integration, "close"):
+            await _llm_integration.close()
         _llm_integration = None
+
+
+# ---------------------------------------------------------------------------
+# Helper
+# ---------------------------------------------------------------------------
+
+
+async def _maybe_await(value):  # type: ignore
+    """Await the value if it's awaitable (supports AsyncMock in tests)."""
+    if asyncio.iscoroutine(value):
+        return await value
+    return value

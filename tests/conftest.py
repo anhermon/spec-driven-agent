@@ -321,3 +321,25 @@ def multiple_tasks() -> List[Task]:
             phase="planning",
         ),
     ]
+
+# ---------------------------------------------------------------------------
+# Additional fixtures required by tests in *tests/test_llm_integration.py*
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_env_vars():
+    """Provide environment variables needed for LLMIntegration tests."""
+    from unittest.mock import patch
+    import os
+    with patch.dict(
+        "os.environ",
+        {
+            "LITELLM_PROXY_URL": "http://test-server:4000/",
+            "LITELLM_API_KEY": "test-api-key",
+        },
+        clear=True,
+    ):
+        yield
+    # Ensure the API key is removed after fixture
+    if "LITELLM_API_KEY" in os.environ:
+        del os.environ["LITELLM_API_KEY"]

@@ -167,8 +167,10 @@ class SpecDrivenWorkflowOrchestrator:
             )
 
             # Update workflow
+            previous_phase = workflow.current_phase
             workflow.current_phase = target_phase
-            workflow.completed_phases.append(workflow.current_phase)
+            # Mark previous phase as completed
+            workflow.completed_phases.append(previous_phase)
             workflow.phase_history.append(
                 {
                     "from_phase": transition.from_phase,

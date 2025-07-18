@@ -183,7 +183,7 @@ class SpecSymbolicEngine:
     def _determine_symbolic_type(self, data: Any) -> str:
         """Determine the symbolic type based on data structure."""
         if isinstance(data, dict):
-            if "openapi" in data:
+            if "openapi" in data or "endpoints" in data:
                 return "api_specification"
             elif "requirements" in data or "features" in data:
                 return "requirements"
