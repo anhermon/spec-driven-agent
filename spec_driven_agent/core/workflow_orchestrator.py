@@ -1,13 +1,12 @@
 """
-Spec-Driven Workflow Orchestrator for managing workflow phases and agent coordination.
+Workflow orchestrator for the spec-driven agent workflow system.
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from ..models.context import SpecDrivenContext
 from ..models.project import Project
 from ..models.workflow import (
     WorkflowInstance,
@@ -69,7 +68,7 @@ class SpecDrivenWorkflowOrchestrator:
                 project_id=project.id,
                 workflow_type="spec_driven",
                 current_phase=WorkflowPhase.DISCOVERY,
-                started_at=datetime.utcnow(),
+                started_at=datetime.now(timezone.utc),
             )
 
             # Create initial workflow state
@@ -80,7 +79,7 @@ class SpecDrivenWorkflowOrchestrator:
                 status="active",
                 workflow_id=workflow_id,
                 current_phase=WorkflowPhase.DISCOVERY,
-                phase_started_at=datetime.utcnow(),
+                phase_started_at=datetime.now(timezone.utc),
             )
 
             # Store workflow and state
@@ -148,13 +147,13 @@ class SpecDrivenWorkflowOrchestrator:
                 trigger_reason=trigger_reason,
                 dependencies_satisfied=True,
                 validation_passed=True,
-                transition_started_at=datetime.utcnow(),
+                transition_started_at=datetime.now(timezone.utc),
             )
 
             # Update workflow state
             current_state = self.workflow_states[workflow_id]
             current_state.current_phase = target_phase
-            current_state.phase_completed_at = datetime.utcnow()
+            current_state.phase_completed_at = datetime.now(timezone.utc)
 
             # Create new state for target phase
             new_state = WorkflowState(
@@ -164,7 +163,7 @@ class SpecDrivenWorkflowOrchestrator:
                 status="active",
                 workflow_id=workflow_id,
                 current_phase=target_phase,
-                phase_started_at=datetime.utcnow(),
+                phase_started_at=datetime.now(timezone.utc),
             )
 
             # Update workflow
@@ -186,7 +185,7 @@ class SpecDrivenWorkflowOrchestrator:
             self.transition_history[workflow_id].append(transition)
 
             # Complete transition
-            transition.transition_completed_at = datetime.utcnow()
+            transition.transition_completed_at = datetime.now(timezone.utc)
 
             # Notify agents of phase change
             await self._notify_agents_of_phase_change(workflow_id, target_phase)

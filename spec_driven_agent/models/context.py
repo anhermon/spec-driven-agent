@@ -2,7 +2,7 @@
 Context models for the spec-driven agent workflow system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
@@ -44,7 +44,8 @@ class AgentContext(StatusModel):
 
     # Performance and monitoring
     last_activity: datetime = Field(
-        default_factory=datetime.utcnow, description="Last activity time"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Last activity time",
     )
     activity_count: int = Field(default=0, description="Activity count")
 
@@ -86,10 +87,20 @@ class SymbolicReference(StatusModel):
     )
     consistency_status: str = Field(default="pending", description="Consistency status")
 
+    # Map symbolic_name to name for StatusModel inheritance
+    name: str = Field(..., description="Human-readable name", alias="symbolic_name")
+
     class Config:
         """Pydantic configuration."""
 
         validate_assignment = True
+        populate_by_name = True
+
+    def __init__(self, **data):
+        # Ensure symbolic_name is mapped to name for StatusModel inheritance
+        if "symbolic_name" in data and "name" not in data:
+            data["name"] = data["symbolic_name"]
+        super().__init__(**data)
 
 
 class SymbolicData(StatusModel):
@@ -123,7 +134,8 @@ class SymbolicData(StatusModel):
         default_factory=dict, description="Context when created"
     )
     last_accessed: datetime = Field(
-        default_factory=datetime.utcnow, description="Last access time"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Last access time",
     )
     access_count: int = Field(default=0, description="Number of times accessed")
 

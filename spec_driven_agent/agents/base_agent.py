@@ -5,7 +5,6 @@ Base agent class for the spec-driven workflow system.
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from uuid import uuid4
 
 from pydantic import BaseModel
 
@@ -84,3 +83,14 @@ class BaseAgent(ABC):
             "status": "alive",
             "timestamp": "2024-01-01T00:00:00Z",
         }
+
+    def __str__(self) -> str:
+        """String representation of the agent."""
+        return f"{self.name} ({self.agent_id})"
+
+    def __repr__(self) -> str:
+        """Detailed string representation of the agent."""
+        return (
+            f"{self.__class__.__name__}(agent_id='{self.agent_id}', "
+            f"name='{self.name}', role={self.role})"
+        )

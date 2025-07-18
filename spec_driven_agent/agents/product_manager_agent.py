@@ -2,7 +2,6 @@
 Product Manager agent for PRD creation and project planning.
 """
 
-from typing import Any, Dict
 
 from ..models.agent import AgentRole
 from ..models.task import Task

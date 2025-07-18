@@ -1,11 +1,11 @@
 """
-Symbolic Engine for spec-driven development with symbolic mechanisms and cognitive tools.
+Symbolic engine for the spec-driven agent workflow system.
 """
 
-import json
-from datetime import datetime
+import asyncio
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Union
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from ..models.context import SymbolicData, SymbolicReference
 
@@ -57,7 +57,7 @@ class SpecSymbolicEngine:
             concrete_data=data,
             symbolic_representation=symbolic_representation,
             creation_context={
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data_type": type(data).__name__,
                 "data_size": len(str(data)) if hasattr(data, "__len__") else 0,
             },
@@ -377,7 +377,7 @@ class SymbolicReferenceResolver:
 
         # Update reference
         reference.resolved = True
-        reference.resolved_at = datetime.utcnow()
+        reference.resolved_at = datetime.now(timezone.utc)
         reference.resolution_data = {"cached": True}
 
         return resolved_data

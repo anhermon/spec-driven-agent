@@ -2,7 +2,8 @@
 Task models for the spec-driven agent workflow system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from pydantic import Field
 from .base import StatusModel
 
 
-class TaskStatus(str):
+class TaskStatus(str, Enum):
     """Task status enumeration."""
 
     PENDING = "pending"
@@ -54,7 +55,8 @@ class TaskResult(StatusModel):
 
     # Metadata
     completed_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Completion timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Completion timestamp",
     )
     reviewed_by: Optional[UUID] = Field(None, description="Reviewer ID")
     review_notes: Optional[str] = Field(None, description="Review notes")
@@ -104,6 +106,8 @@ class Task(StatusModel):
     # Task identification
     task_id: str = Field(..., description="Unique task identifier")
     task_type: str = Field(..., description="Type of task")
+    # Map task_name to name for StatusModel inheritance
+    name: str = Field(..., description="Human-readable task name", alias="task_name")
     task_name: str = Field(..., description="Human-readable task name")
 
     # Task details
@@ -135,7 +139,8 @@ class Task(StatusModel):
 
     # Timeline
     created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Creation timestamp",
     )
     assigned_at: Optional[datetime] = Field(None, description="Assignment timestamp")
     started_at: Optional[datetime] = Field(None, description="Start timestamp")
@@ -196,3 +201,10 @@ class Task(StatusModel):
 
         use_enum_values = True
         validate_assignment = True
+        populate_by_name = True
+
+    def __init__(self, **data):
+        # Ensure task_name is mapped to name for StatusModel inheritance
+        if "task_name" in data and "name" not in data:
+            data["name"] = data["task_name"]
+        super().__init__(**data)

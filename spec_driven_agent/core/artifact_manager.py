@@ -6,7 +6,7 @@ import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from uuid import UUID, uuid4
 
 from ..models.artifact import Artifact, ArtifactMetadata, ArtifactType

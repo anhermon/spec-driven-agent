@@ -2,7 +2,6 @@
 Analyst agent for requirements gathering and stakeholder interviews.
 """
 
-from typing import Any, Dict
 
 from ..models.agent import AgentRole
 from ..models.task import Task

@@ -2,7 +2,8 @@
 Agent models for the spec-driven agent workflow system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -11,11 +12,12 @@ from pydantic import Field
 from .base import StatusModel
 
 
-class AgentRole(str):
+class AgentRole(str, Enum):
     """Agent role enumeration."""
 
     ANALYST = "analyst"
     PROJECT_MANAGER = "project_manager"
+    PRODUCT_MANAGER = "product_manager"
     ARCHITECT = "architect"
     SCRUM_MASTER = "scrum_master"
     DEVELOPER = "developer"
@@ -91,7 +93,8 @@ class AgentContext(StatusModel):
         default_factory=dict, description="Performance metrics"
     )
     last_activity: datetime = Field(
-        default_factory=datetime.utcnow, description="Last activity timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Last activity timestamp",
     )
 
     class Config:
@@ -114,7 +117,8 @@ class AgentMessage(StatusModel):
 
     # Metadata
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Message timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Message timestamp",
     )
     expires_at: Optional[datetime] = Field(None, description="Message expiration time")
 

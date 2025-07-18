@@ -12,13 +12,18 @@ from fastapi.responses import JSONResponse
 
 from . import __version__
 from .agents import AgentManager, AnalystAgent, ProductManagerAgent
-from .cli import app as cli_app
+from .core.llm_integration import LLMIntegrationError, get_llm_integration
 from .models.task import Task, TaskStatus
 
 # Create FastAPI application
 app = FastAPI(
     title="Spec-Driven Agent Workflow",
-    description="A comprehensive spec-driven development workflow that combines the best practices from BMAD-METHOD, Context Engineering, and Spec-Driven Development, enhanced with A2A (Agent-to-Agent) communication protocols.",
+    description=(
+        "A comprehensive spec-driven development workflow that combines the "
+        "best practices from BMAD-METHOD, Context Engineering, and "
+        "Spec-Driven Development, enhanced with A2A (Agent-to-Agent) "
+        "communication protocols."
+    ),
     version=__version__,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -108,7 +113,7 @@ async def assign_task(agent_id: str, task_data: Dict[str, Any]):
     # Create task from request data
     task = Task(
         name=task_data.get("title", "Generic Task"),  # Required by StatusModel
-        status=TaskStatus(),  # Required by StatusModel
+        status=TaskStatus.PENDING,  # Required by StatusModel
         task_id=task_data.get("task_id", f"task-{agent_id}-001"),
         task_type=task_data.get("task_type", "generic"),
         task_name=task_data.get("title", "Generic Task"),  # Map title to task_name
@@ -201,6 +206,147 @@ async def transition_workflow(project_id: str, phase: str):
         "new_phase": phase,
         "status": "transitioned",
     }
+
+
+# LLM Integration Endpoints
+@app.get("/api/v1/llm/health")
+async def llm_health_check():
+    """Check LLM integration health."""
+    try:
+        llm = await get_llm_integration()
+        result = await llm.test_connection()
+        return {
+            "status": "healthy",
+            "llm_integration": result,
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(
+            status_code=503, detail=f"LLM integration error: {e.message}"
+        )
+
+
+@app.post("/api/v1/llm/analyze-requirements")
+async def analyze_requirements(requirements_data: Dict[str, Any]):
+    """Analyze requirements using LLM."""
+    try:
+        llm = await get_llm_integration()
+        requirements_text = requirements_data.get("requirements", "")
+
+        if not requirements_text:
+            raise HTTPException(status_code=400, detail="Requirements text is required")
+
+        result = await llm.analyze_requirements(requirements_text)
+        return {
+            "status": "success",
+            "analysis": result["analysis"],
+            "usage": result["usage"],
+            "model": result["model"],
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(status_code=503, detail=f"LLM analysis error: {e.message}")
+
+
+@app.post("/api/v1/llm/generate-api-spec")
+async def generate_api_spec(requirements_data: Dict[str, Any]):
+    """Generate API specification using LLM."""
+    try:
+        llm = await get_llm_integration()
+        requirements_analysis = requirements_data.get("requirements_analysis", "")
+
+        if not requirements_analysis:
+            raise HTTPException(
+                status_code=400, detail="Requirements analysis is required"
+            )
+
+        result = await llm.generate_api_spec(requirements_analysis)
+        return {
+            "status": "success",
+            "api_spec": result["api_spec"],
+            "usage": result["usage"],
+            "model": result["model"],
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(
+            status_code=503, detail=f"LLM generation error: {e.message}"
+        )
+
+
+@app.post("/api/v1/llm/validate-consistency")
+async def validate_consistency(context_data: Dict[str, Any]):
+    """Validate consistency using LLM."""
+    try:
+        llm = await get_llm_integration()
+
+        if not context_data:
+            raise HTTPException(status_code=400, detail="Context data is required")
+
+        result = await llm.validate_consistency(context_data)
+        return {
+            "status": "success",
+            "consistency_analysis": result["consistency_analysis"],
+            "usage": result["usage"],
+            "model": result["model"],
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(
+            status_code=503, detail=f"LLM validation error: {e.message}"
+        )
+
+
+@app.post("/api/v1/llm/generate-task-plan")
+async def generate_task_plan(task_data: Dict[str, Any]):
+    """Generate task execution plan using LLM."""
+    try:
+        llm = await get_llm_integration()
+        task_description = task_data.get("task_description", "")
+        context = task_data.get("context", {})
+
+        if not task_description:
+            raise HTTPException(status_code=400, detail="Task description is required")
+
+        result = await llm.generate_task_plan(task_description, context)
+        return {
+            "status": "success",
+            "task_plan": result["task_plan"],
+            "usage": result["usage"],
+            "model": result["model"],
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(status_code=503, detail=f"LLM planning error: {e.message}")
+
+
+@app.post("/api/v1/llm/generate-text")
+async def generate_text(text_request: Dict[str, Any]):
+    """Generate text using LLM."""
+    try:
+        llm = await get_llm_integration()
+        prompt = text_request.get("prompt", "")
+        model = text_request.get("model", "gpt-4")
+        max_tokens = text_request.get("max_tokens", 1000)
+        temperature = text_request.get("temperature", 0.7)
+        system_message = text_request.get("system_message")
+
+        if not prompt:
+            raise HTTPException(status_code=400, detail="Prompt is required")
+
+        result = await llm.generate_text(
+            prompt=prompt,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system_message=system_message,
+        )
+        return {
+            "status": "success",
+            "text": result["text"],
+            "usage": result["usage"],
+            "model": result["model"],
+            "finish_reason": result["finish_reason"],
+        }
+    except LLMIntegrationError as e:
+        raise HTTPException(
+            status_code=503, detail=f"LLM generation error: {e.message}"
+        )
 
 
 @app.exception_handler(HTTPException)

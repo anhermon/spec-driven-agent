@@ -1,16 +1,13 @@
 """
-Spec-Driven Context Engine for managing rich context with symbolic mechanisms.
+Context engine for the spec-driven agent workflow system.
 """
 
 import asyncio
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from pydantic import ValidationError
-
 from ..models.context import (
-    ContextConsistencyValidator,
     ContextUpdate,
     SpecDrivenContext,
     SymbolicData,
@@ -113,7 +110,7 @@ class SpecDrivenContextEngine:
             # Update history
             for update in updates:
                 update.processed = True
-                update.processed_at = datetime.utcnow()
+                update.processed_at = datetime.now(timezone.utc)
                 self.update_history[context_id].append(update)
 
             # Notify agents of context changes
@@ -228,6 +225,7 @@ class SpecDrivenContextEngine:
             symbolic_name="Project Requirements",
             symbolic_type="requirements",
             target_id=project.id,
+            status="active",
         )
 
     async def _apply_updates(
@@ -252,7 +250,7 @@ class SpecDrivenContextEngine:
                 updated_context.symbolic_references.update(update.update_data)
 
             # Update metadata
-            updated_context.updated_at = datetime.utcnow()
+            updated_context.updated_at = datetime.now(timezone.utc)
             updated_context.version += 1
             updated_context.update_history.append(update.id)
 
@@ -270,7 +268,8 @@ class SpecDrivenContextEngine:
         # For now, just log the notification
         for update in updates:
             print(
-                f"Context {context_id} updated by {update.source_type}: {update.update_type}"
+                f"Context {context_id} updated by {update.source_type}: "
+                f"{update.update_type}"
             )
 
     async def _resolve_inconsistencies(
@@ -284,4 +283,4 @@ class SpecDrivenContextEngine:
         # Update context consistency status
         context.consistency_status = "resolving"
         context.consistency_errors = inconsistencies
-        context.last_consistency_check = datetime.utcnow()
+        context.last_consistency_check = datetime.now(timezone.utc)

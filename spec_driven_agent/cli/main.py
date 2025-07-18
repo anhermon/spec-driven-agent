@@ -15,7 +15,6 @@ from rich.table import Table
 
 from ..core import SpecDrivenContextEngine, SpecDrivenWorkflowOrchestrator
 from ..models.project import Project, ProjectStatus
-from ..models.workflow import WorkflowPhase, WorkflowStatus
 
 console = Console()
 
@@ -128,7 +127,8 @@ def spec(project_id: str, from_file: Optional[str], interactive: bool):
 
             else:
                 console.print(
-                    "[yellow]Please specify either --from-file or --interactive[/yellow]"
+                    "[yellow]Please specify either --from-file or "
+                    "--interactive[/yellow]"
                 )
                 return
 
@@ -268,7 +268,8 @@ def qa(project_id: str, module: Optional[str], integration: bool, e2e: bool, all
 
             else:
                 console.print(
-                    "[yellow]Please specify --module, --integration, --e2e, or --all[/yellow]"
+                    "[yellow]Please specify --module, --integration, --e2e, "
+                    "or --all[/yellow]"
                 )
                 return
 

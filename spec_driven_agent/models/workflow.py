@@ -2,7 +2,8 @@
 Workflow models for the spec-driven agent workflow system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -11,7 +12,7 @@ from pydantic import Field
 from .base import StatusModel
 
 
-class WorkflowPhase(str):
+class WorkflowPhase(str, Enum):
     """Workflow phase enumeration."""
 
     DISCOVERY = "discovery"
@@ -24,7 +25,7 @@ class WorkflowPhase(str):
     COMPLETED = "completed"
 
 
-class WorkflowStatus(str):
+class WorkflowStatus(str, Enum):
     """Workflow status enumeration."""
 
     PENDING = "pending"
@@ -41,7 +42,8 @@ class WorkflowState(StatusModel):
     workflow_id: UUID = Field(..., description="Associated workflow ID")
     current_phase: WorkflowPhase = Field(..., description="Current workflow phase")
     phase_started_at: datetime = Field(
-        default_factory=datetime.utcnow, description="When current phase started"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="When current phase started",
     )
     phase_completed_at: Optional[datetime] = Field(
         None, description="When current phase completed"
@@ -140,7 +142,8 @@ class WorkflowInstance(StatusModel):
 
     # Timeline
     started_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Workflow start time"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Workflow start time",
     )
     estimated_completion: Optional[datetime] = Field(
         None, description="Estimated completion time"
@@ -183,7 +186,8 @@ class WorkflowTransition(StatusModel):
 
     # Timing
     transition_started_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Transition start time"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Transition start time",
     )
     transition_completed_at: Optional[datetime] = Field(
         None, description="Transition completion time"

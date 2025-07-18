@@ -2,7 +2,7 @@
 Base models and common functionality for the spec-driven agent workflow system.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
 
@@ -26,8 +26,8 @@ class BaseModel(PydanticBaseModel):
 class TimestampedModel(BaseModel):
     """Base model with timestamp fields."""
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class IdentifiableModel(TimestampedModel):
@@ -50,5 +50,7 @@ class StatusModel(MetadataModel):
     """Base model with status tracking."""
 
     status: str = Field(..., description="Current status")
-    status_updated_at: datetime = Field(default_factory=datetime.utcnow)
+    status_updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     status_reason: Optional[str] = Field(None, description="Reason for status change")
