@@ -2,21 +2,26 @@
 Pytest configuration and shared fixtures for spec-driven-agent tests.
 """
 
-import pytest
 import asyncio
+from typing import Any, Dict, List
 from uuid import uuid4
-from typing import Dict, Any, List
 
-from spec_driven_agent.models.agent import Agent, AgentRole
-from spec_driven_agent.models.task import Task, TaskStatus
-from spec_driven_agent.models.project import Project, ProjectStatus
-from spec_driven_agent.models.context import SpecDrivenContext, ContextUpdate
-from spec_driven_agent.models.workflow import WorkflowInstance, WorkflowPhase, WorkflowStatus
-from spec_driven_agent.models.artifact import Artifact, ArtifactType
-from spec_driven_agent.agents.base_agent import BaseAgent
-from spec_driven_agent.agents.analyst_agent import AnalystAgent
-from spec_driven_agent.agents.product_manager_agent import ProductManagerAgent
+import pytest
+
 from spec_driven_agent.agents.agent_manager import AgentManager
+from spec_driven_agent.agents.analyst_agent import AnalystAgent
+from spec_driven_agent.agents.base_agent import BaseAgent
+from spec_driven_agent.agents.product_manager_agent import ProductManagerAgent
+from spec_driven_agent.models.agent import Agent, AgentRole
+from spec_driven_agent.models.artifact import Artifact, ArtifactType
+from spec_driven_agent.models.context import ContextUpdate, SpecDrivenContext
+from spec_driven_agent.models.project import Project, ProjectStatus
+from spec_driven_agent.models.task import Task, TaskStatus
+from spec_driven_agent.models.workflow import (
+    WorkflowInstance,
+    WorkflowPhase,
+    WorkflowStatus,
+)
 
 
 @pytest.fixture(scope="session")
@@ -126,7 +131,7 @@ def sample_agent() -> Agent:
         status="active",
         capabilities=[],
         config={},
-        settings={}
+        settings={},
     )
 
 
@@ -272,7 +277,7 @@ def multiple_agents() -> List[Agent]:
             status="active",
             capabilities=[],
             config={},
-            settings={}
+            settings={},
         ),
         Agent(
             agent_id="pm-001",
@@ -282,7 +287,7 @@ def multiple_agents() -> List[Agent]:
             status="active",
             capabilities=[],
             config={},
-            settings={}
+            settings={},
         ),
     ]
 
@@ -315,4 +320,4 @@ def multiple_tasks() -> List[Task]:
             workflow_id=uuid4(),
             phase="planning",
         ),
-    ] 
+    ]

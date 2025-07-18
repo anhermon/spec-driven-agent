@@ -2,24 +2,26 @@
 Unit tests for BaseAgent functionality.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
+
+import pytest
+
 from spec_driven_agent.agents.base_agent import BaseAgent, SimpleTaskResult
-from spec_driven_agent.models.task import Task, TaskStatus
 from spec_driven_agent.models.agent import Agent, AgentRole
+from spec_driven_agent.models.task import Task, TaskStatus
 
 
 class TestAgent(BaseAgent):
     """Concrete test agent for testing BaseAgent functionality."""
-    
+
     async def _process_task_impl(self, task: Task) -> SimpleTaskResult:
         """Test implementation of task processing."""
         return SimpleTaskResult(
             task_id=task.task_id,
             success=True,
             message="Test task completed",
-            artifacts=[]
+            artifacts=[],
         )
 
 
@@ -63,7 +65,7 @@ class TestBaseAgent:
     async def test_base_agent_process_task_success(self, base_agent, sample_task):
         """Test successful task processing."""
         result = await base_agent.process_task(sample_task)
-        
+
         assert result.task_id == "task-001"
         assert result.success is True
         assert result.message == "Test task completed"
@@ -76,9 +78,9 @@ class TestBaseAgent:
         base_agent._process_task_impl = AsyncMock(
             side_effect=Exception("Task processing failed")
         )
-        
+
         result = await base_agent.process_task(sample_task)
-        
+
         assert result.task_id == "task-001"
         assert result.success is False
         assert "Task processing failed" in result.error_message
@@ -87,7 +89,7 @@ class TestBaseAgent:
     async def test_base_agent_get_status(self, base_agent):
         """Test agent status retrieval."""
         status = await base_agent.get_status()
-        
+
         assert status["agent_id"] == "test-agent-001"
         assert status["name"] == "Test Base Agent"
         assert status["role"] == "analyst"
@@ -98,7 +100,7 @@ class TestBaseAgent:
     async def test_base_agent_ping(self, base_agent):
         """Test agent ping functionality."""
         response = await base_agent.ping()
-        
+
         assert response["agent_id"] == "test-agent-001"
         assert response["status"] == "alive"
         assert "timestamp" in response
@@ -132,6 +134,6 @@ class TestBaseAgent:
             name="Different Agent",
             role=AgentRole.PRODUCT_MANAGER,
         )
-        
+
         assert agent1.agent_id == agent2.agent_id
-        assert agent1.agent_id != agent3.agent_id 
+        assert agent1.agent_id != agent3.agent_id

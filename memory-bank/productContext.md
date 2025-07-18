@@ -131,4 +131,4 @@ The convergence of three powerful approaches creates a unique opportunity:
 - **Standards-Based**: Uses A2A SDK and Pydantic AI for interoperability
 - **Context-Aware**: Maintains rich context throughout the process
 - **User-Centric**: Puts human developers in control while leveraging AI capabilities
-- **Leverage Existing Tools**: Builds on proven SDKs instead of reinventing the wheel 
+- **Leverage Existing Tools**: Builds on proven SDKs instead of reinventing the wheel

@@ -51,7 +51,7 @@ agent qa test --module auth
 export class SpecDashboardProvider {
     provideWebviewContent(webview: vscode.Webview): string {
         return `
-            <iframe src="http://localhost:8000/dashboard" 
+            <iframe src="http://localhost:8000/dashboard"
                     style="width: 100%; height: 100%; border: none;">
             </iframe>
         `;
@@ -92,12 +92,12 @@ class AgentLanguageServer:
     def __init__(self):
         self.spec_validator = SpecDeveloperAgent()
         self.architect = SpecArchitectAgent()
-    
+
     def validate_document(self, uri: str, content: str) -> List[Diagnostic]:
         """Validate code against current specification"""
         violations = self.spec_validator.validate_code_against_spec(content)
         return [self.create_diagnostic(violation) for violation in violations]
-    
+
     def provide_code_actions(self, uri: str, range: Range) -> List[CodeAction]:
         """Provide agent-triggered code actions"""
         return [
@@ -126,18 +126,18 @@ class SpecDrivenWorkflowOrchestrator:
     def __init__(self):
         self.state_manager = WorkflowStateManager()
         self.task_dependencies = TaskDependencyGraph()
-    
+
     async def transition_phase(self, workflow_id: str, phase: WorkflowPhase) -> None:
         """Ensure clear state transitions with dependency validation"""
         current_state = await self.state_manager.get_state(workflow_id)
-        
+
         # Validate dependencies are met
         if not self.task_dependencies.can_transition(current_state, phase):
             raise WorkflowTransitionError("Dependencies not met")
-        
+
         # Update state atomically
         await self.state_manager.update_state(workflow_id, phase)
-        
+
         # Notify relevant agents
         await self.notify_agents_of_transition(workflow_id, phase)
 ```
@@ -148,21 +148,21 @@ class SpecSymbolicEngine:
     def __init__(self):
         self.context_lock = asyncio.Lock()
         self.consistency_validator = ContextConsistencyValidator()
-    
+
     async def update_context(self, context_id: str, updates: List[ContextUpdate]) -> None:
         """Ensure context consistency with proper locking"""
         async with self.context_lock:
             # Apply updates
             context = await self.get_context(context_id)
             updated_context = self.apply_updates(context, updates)
-            
+
             # Validate consistency
             if not self.consistency_validator.is_consistent(updated_context):
                 raise ContextInconsistencyError("Updates would create inconsistent state")
-            
+
             # Commit changes atomically
             await self.save_context(context_id, updated_context)
-            
+
             # Notify agents of context changes
             await self.notify_agents_of_context_update(context_id, updates)
 ```
@@ -215,4 +215,4 @@ class SpecSymbolicEngine:
 
 ## Conclusion
 
-This phased approach ensures we can provide immediate value with minimal effort while building toward a rich, integrated experience. The CLI-first approach leverages existing IDE capabilities and provides a solid foundation for more advanced integrations. 
+This phased approach ensures we can provide immediate value with minimal effort while building toward a rich, integrated experience. The CLI-first approach leverages existing IDE capabilities and provides a solid foundation for more advanced integrations.

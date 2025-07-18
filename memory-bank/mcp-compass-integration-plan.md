@@ -41,15 +41,15 @@ class MCPCompassClient:
     def __init__(self, base_url: str = "https://mcphub.io"):
         self.base_url = base_url
         self.session = httpx.AsyncClient()
-    
+
     async def search_services(self, query: str) -> List[MCPService]:
         """Search for MCP services using natural language query."""
         pass
-    
+
     async def get_service_details(self, service_id: str) -> MCPService:
         """Get detailed information about a specific service."""
         pass
-    
+
     async def get_recommendations(self, task_type: str) -> List[MCPService]:
         """Get service recommendations for a task type."""
         pass
@@ -63,13 +63,13 @@ class MCPEnhancedAgent(BaseAgent):
         super().__init__(*args, **kwargs)
         self.mcp_client = MCPCompassClient()
         self.available_tools = []
-    
+
     async def discover_tools(self, task_context: Dict[str, Any]):
         """Discover relevant MCP tools for the current task."""
         query = self._build_discovery_query(task_context)
         services = await self.mcp_client.search_services(query)
         return self._filter_relevant_services(services, task_context)
-    
+
     async def enhance_capabilities(self, task: Task):
         """Enhance agent capabilities with discovered tools."""
         tools = await self.discover_tools(task.context)
@@ -84,7 +84,7 @@ class MCPEnhancedWorkflowOrchestrator(SpecDrivenWorkflowOrchestrator):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mcp_client = MCPCompassClient()
-    
+
     async def optimize_workflow(self, workflow: Workflow):
         """Optimize workflow with MCP service recommendations."""
         for phase in workflow.phases:
@@ -182,16 +182,16 @@ class DiscoveryQueryBuilder:
         """Build natural language query for task-based discovery."""
         context = task.context
         task_type = task.task_type.value
-        
+
         query_parts = [
             f"Find MCP services for {task_type}",
             f"Domain: {context.get('domain', 'general')}",
             f"Requirements: {task.description}"
         ]
-        
+
         if context.get('constraints'):
             query_parts.append(f"Constraints: {', '.join(context['constraints'])}")
-        
+
         return " ".join(query_parts)
 ```
 
@@ -203,14 +203,14 @@ class ToolIntegrationFramework:
         # Validate service compatibility
         if not self._is_compatible(agent, service):
             raise IncompatibleServiceError(f"Service {service.id} not compatible with agent {agent.agent_id}")
-        
+
         # Create tool wrapper
         tool = await self._create_tool_wrapper(service)
-        
+
         # Add tool to agent capabilities
         agent.add_capability(tool.name)
         agent.tools[tool.name] = tool
-        
+
         # Update agent metadata
         agent.metadata['mcp_tools'] = agent.metadata.get('mcp_tools', []) + [service.id]
 ```
@@ -302,4 +302,4 @@ class ToolIntegrationFramework:
 **Status**: 📋 PLANNING PHASE
 **Priority**: Medium - Future enhancement
 **Dependencies**: Core agent system completion
-**Timeline**: 6-8 weeks for full implementation 
+**Timeline**: 6-8 weeks for full implementation

@@ -2,16 +2,17 @@
 Main FastAPI application for the spec-driven agent workflow system.
 """
 
+from typing import Any, Dict
+from uuid import uuid4
+
+import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
-from typing import Dict, Any
-from uuid import uuid4
 
 from . import __version__
-from .cli import app as cli_app
 from .agents import AgentManager, AnalystAgent, ProductManagerAgent
+from .cli import app as cli_app
 from .models.task import Task, TaskStatus
 
 # Create FastAPI application
@@ -82,7 +83,7 @@ async def get_agent(agent_id: str):
     agent = agent_manager.get_agent(agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     status = await agent.get_status()
     return status
 
@@ -93,7 +94,7 @@ async def ping_agent(agent_id: str):
     agent = agent_manager.get_agent(agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     return await agent.ping()
 
 
@@ -103,7 +104,7 @@ async def assign_task(agent_id: str, task_data: Dict[str, Any]):
     agent = agent_manager.get_agent(agent_id)
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-    
+
     # Create task from request data
     task = Task(
         name=task_data.get("title", "Generic Task"),  # Required by StatusModel
@@ -116,12 +117,12 @@ async def assign_task(agent_id: str, task_data: Dict[str, Any]):
         assigned_agent_id=uuid4(),  # Generate a UUID for the agent
         dependencies=task_data.get("dependencies", []),
         workflow_id=uuid4(),  # Generate a UUID for the workflow
-        phase="test-phase"  # Required field
+        phase="test-phase",  # Required field
     )
-    
+
     # Process the task
     result = await agent_manager.assign_task(agent_id, task)
-    
+
     return {
         "task_id": task.task_id,
         "agent_id": agent_id,
@@ -133,11 +134,13 @@ async def assign_task(agent_id: str, task_data: Dict[str, Any]):
                 {
                     "artifact_id": artifact.artifact_id,
                     "name": artifact.name,
-                    "artifact_type": artifact.artifact_type.value
+                    "artifact_type": artifact.artifact_type.value,
                 }
                 for artifact in result.artifacts
-            ] if result.artifacts else []
-        }
+            ]
+            if result.artifacts
+            else [],
+        },
     }
 
 
@@ -235,4 +238,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

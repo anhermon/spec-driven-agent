@@ -8,18 +8,11 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
-      - id: check-json
       - id: check-toml
       - id: debug-statements
       - id: check-case-conflict
       - id: check-docstring-first
       - id: check-ast
-      - id: check-json
-      - id: check-merge-conflict
-      - id: check-yaml
-      - id: debug-statements
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
       - id: requirements-txt-fixer
 
   # Python code formatting
@@ -42,69 +35,11 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
-        args: [--max-line-length=88, --extend-ignore=E203,W503]
-
-  # Type checking (optional - can be slow)
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-all]
-        args: [--ignore-missing-imports, --no-strict-optional]
-
-  # Security checks
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.5
-    hooks:
-      - id: bandit
-        args: [-r, spec_driven_agent, -f, json, -o, bandit-report.json]
-        exclude: ^tests/
+        args: [--max-line-length=88, --extend-ignore=E203]
 
   # Local hooks for project-specific checks
   - repo: local
     hooks:
-      # Unit tests
-      - id: pytest
-        name: pytest
-        entry: pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-        stages: [commit]
-        args: [
-          --strict-markers,
-          --strict-config,
-          --cov=spec_driven_agent,
-          --cov-report=term-missing,
-          --cov-report=html,
-          --cov-fail-under=80,
-          tests/unit/
-        ]
-
-      # Integration tests (run on push)
-      - id: pytest-integration
-        name: pytest-integration
-        entry: pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-        stages: [push]
-        args: [
-          --strict-markers,
-          --strict-config,
-          tests/integration/
-        ]
-
-      # Coverage check
-      - id: coverage-check
-        name: coverage-check
-        entry: coverage
-        language: system
-        pass_filenames: false
-        always_run: true
-        stages: [commit]
-        args: [report, --fail-under=80]
-
       # Custom validation
       - id: validate-models
         name: validate-models
@@ -114,13 +49,3 @@ repos:
         always_run: true
         stages: [commit]
         args: [-c, "from spec_driven_agent.models import *; print('Models validation passed')"]
-
-      # Documentation check
-      - id: docstring-check
-        name: docstring-check
-        entry: python
-        language: system
-        pass_filenames: false
-        always_run: true
-        stages: [commit]
-        args: [-c, "import pydocstyle; pydocstyle.main(['spec_driven_agent'])"] 

@@ -4,16 +4,20 @@ Test helper utilities for common testing patterns.
 
 import asyncio
 import json
+from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timedelta
 from uuid import uuid4
 
-from spec_driven_agent.models.task import Task, TaskStatus
 from spec_driven_agent.models.agent import Agent, AgentRole
-from spec_driven_agent.models.project import Project, ProjectStatus
-from spec_driven_agent.models.workflow import WorkflowInstance, WorkflowPhase, WorkflowStatus
 from spec_driven_agent.models.artifact import Artifact, ArtifactType
+from spec_driven_agent.models.project import Project, ProjectStatus
+from spec_driven_agent.models.task import Task, TaskStatus
+from spec_driven_agent.models.workflow import (
+    WorkflowInstance,
+    WorkflowPhase,
+    WorkflowStatus,
+)
 
 
 class TestDataFactory:
@@ -31,7 +35,7 @@ class TestDataFactory:
         assigned_agent_id: Optional[str] = None,
         workflow_id: Optional[str] = None,
         phase: str = "discovery",
-        **kwargs
+        **kwargs,
     ) -> Task:
         """Create a test task with default or custom values."""
         return Task(
@@ -45,7 +49,7 @@ class TestDataFactory:
             assigned_agent_id=uuid4() if assigned_agent_id is None else uuid4(),
             workflow_id=uuid4() if workflow_id is None else uuid4(),
             phase=phase,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -56,7 +60,7 @@ class TestDataFactory:
         role: AgentRole = AgentRole.ANALYST,
         status: str = "active",
         capabilities: Optional[List[str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Agent:
         """Create a test agent with default or custom values."""
         return Agent(
@@ -68,7 +72,7 @@ class TestDataFactory:
             capabilities=capabilities or [],
             config={},
             settings={},
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -79,7 +83,7 @@ class TestDataFactory:
         current_phase: ProjectStatus = ProjectStatus.DRAFT,
         stakeholders: Optional[List[str]] = None,
         tags: Optional[List[str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Project:
         """Create a test project with default or custom values."""
         return Project(
@@ -89,7 +93,7 @@ class TestDataFactory:
             current_phase=current_phase,
             stakeholders=stakeholders or [],
             tags=tags or ["test"],
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -101,7 +105,7 @@ class TestDataFactory:
         assigned_agents: Optional[List[str]] = None,
         task_queue: Optional[List[str]] = None,
         completed_tasks: Optional[List[str]] = None,
-        **kwargs
+        **kwargs,
     ) -> WorkflowInstance:
         """Create a test workflow with default or custom values."""
         return WorkflowInstance(
@@ -112,7 +116,7 @@ class TestDataFactory:
             assigned_agents=assigned_agents or [],
             task_queue=task_queue or [],
             completed_tasks=completed_tasks or [],
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -124,7 +128,7 @@ class TestDataFactory:
         description: str = "A test artifact",
         project_id: Optional[str] = None,
         phase: str = "discovery",
-        **kwargs
+        **kwargs,
     ) -> Artifact:
         """Create a test artifact with default or custom values."""
         return Artifact(
@@ -135,7 +139,7 @@ class TestDataFactory:
             description=description,
             project_id=uuid4() if project_id is None else uuid4(),
             phase=phase,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -164,12 +168,16 @@ class AsyncTestCase:
     @staticmethod
     def patch_async_method(target, method_name: str, return_value: Any = None):
         """Patch an async method for testing."""
-        return patch.object(target, method_name, new_callable=AsyncMock, return_value=return_value)
+        return patch.object(
+            target, method_name, new_callable=AsyncMock, return_value=return_value
+        )
 
     @staticmethod
     def patch_sync_method(target, method_name: str, return_value: Any = None):
         """Patch a sync method for testing."""
-        return patch.object(target, method_name, new_callable=MagicMock, return_value=return_value)
+        return patch.object(
+            target, method_name, new_callable=MagicMock, return_value=return_value
+        )
 
 
 class MockResponse:
@@ -180,7 +188,7 @@ class MockResponse:
         status_code: int = 200,
         json_data: Optional[Dict[str, Any]] = None,
         text: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ):
         self.status_code = status_code
         self._json_data = json_data or {}
@@ -270,25 +278,30 @@ class PerformanceTestMixin:
         result = await coro
         end_time = datetime.now()
         execution_time = (end_time - start_time).total_seconds()
-        
-        assert execution_time <= max_seconds, f"Execution took {execution_time}s, expected <= {max_seconds}s"
+
+        assert (
+            execution_time <= max_seconds
+        ), f"Execution took {execution_time}s, expected <= {max_seconds}s"
         return result, execution_time
 
     @staticmethod
     def assert_memory_usage_acceptable(func, max_memory_mb: float = 100.0):
         """Assert that a function doesn't use excessive memory."""
-        import psutil
         import os
-        
+
+        import psutil
+
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-        
+
         result = func()
-        
+
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_used = final_memory - initial_memory
-        
-        assert memory_used <= max_memory_mb, f"Memory usage {memory_used}MB exceeds limit {max_memory_mb}MB"
+
+        assert (
+            memory_used <= max_memory_mb
+        ), f"Memory usage {memory_used}MB exceeds limit {max_memory_mb}MB"
         return result
 
 
@@ -318,15 +331,19 @@ def create_test_artifact(**kwargs) -> Artifact:
     return TestDataFactory.create_artifact(**kwargs)
 
 
-def mock_async_function(return_value: Any = None, side_effect: Exception = None) -> AsyncMock:
+def mock_async_function(
+    return_value: Any = None, side_effect: Exception = None
+) -> AsyncMock:
     """Create a mock async function."""
     if side_effect:
         return AsyncMock(side_effect=side_effect)
     return AsyncMock(return_value=return_value)
 
 
-def mock_sync_function(return_value: Any = None, side_effect: Exception = None) -> MagicMock:
+def mock_sync_function(
+    return_value: Any = None, side_effect: Exception = None
+) -> MagicMock:
     """Create a mock sync function."""
     if side_effect:
         return MagicMock(side_effect=side_effect)
-    return MagicMock(return_value=return_value) 
+    return MagicMock(return_value=return_value)

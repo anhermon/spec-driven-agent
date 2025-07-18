@@ -2,9 +2,10 @@
 Unit tests for Task model.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+import pytest
 from pydantic import ValidationError
 
 from spec_driven_agent.models.task import Task, TaskStatus
@@ -27,7 +28,7 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         assert task.task_id == "task-001"
         assert task.task_name == "Test Task"
         assert task.task_type == "requirements_gathering"
@@ -54,7 +55,7 @@ class TestTask:
             requirements=["requirement1", "requirement2"],
             acceptance_criteria=["criteria1", "criteria2"],
         )
-        
+
         assert task.due_date is not None
         assert task.requirements == ["requirement1", "requirement2"]
         assert task.acceptance_criteria == ["criteria1", "criteria2"]
@@ -106,9 +107,9 @@ class TestTask:
             workflow_id=uuid4(),
             phase="planning",
         )
-        
+
         task_dict = task.model_dump()
-        
+
         assert task_dict["task_id"] == "task-006"
         assert task_dict["task_name"] == "Serialization Test Task"
         assert task_dict["task_type"] == "prd_creation"
@@ -131,9 +132,9 @@ class TestTask:
             "phase": "discovery",
             "requirements": ["req1"],
         }
-        
+
         task = Task.model_validate(task_data)
-        
+
         assert task.task_id == "task-007"
         assert task.task_name == "Deserialization Test Task"
         assert task.task_type == "market_research"
@@ -156,11 +157,11 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         # Test status updates
         task.status = TaskStatus.IN_PROGRESS
         assert task.status == TaskStatus.IN_PROGRESS
-        
+
         task.status = TaskStatus.COMPLETED
         assert task.status == TaskStatus.COMPLETED
 
@@ -178,12 +179,12 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         assert task.priority == "high"
-        
+
         task.priority = "low"
         assert task.priority == "low"
-        
+
         task.priority = "critical"
         assert task.priority == "critical"
 
@@ -201,7 +202,7 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         task2 = Task(
             task_id="task-012",  # Same ID
             task_name="Different Name",
@@ -214,10 +215,10 @@ class TestTask:
             workflow_id=uuid4(),  # Different workflow
             phase="planning",  # Different phase
         )
-        
+
         # Tasks with same ID should be equal
         assert task1.task_id == task2.task_id
-        
+
         # Different ID should not be equal
         task3 = Task(
             task_id="task-013",  # Different ID
@@ -231,7 +232,7 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         assert task1.task_id != task3.task_id
 
     def test_task_str_representation(self):
@@ -248,7 +249,7 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         str_repr = str(task)
         assert "String Test Task" in str_repr
         assert "task-014" in str_repr
@@ -267,7 +268,7 @@ class TestTask:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         repr_str = repr(task)
         assert "Task" in repr_str
         assert "task-015" in repr_str
@@ -279,4 +280,4 @@ class TestTask:
         assert TaskStatus.IN_PROGRESS == "in_progress"
         assert TaskStatus.COMPLETED == "completed"
         assert TaskStatus.FAILED == "failed"
-        assert TaskStatus.CANCELLED == "cancelled" 
+        assert TaskStatus.CANCELLED == "cancelled"

@@ -346,4 +346,4 @@ docker-compose -f docker-compose.prod.yml up -d
 ### 4. Agent Security
 - Agent authentication using A2A protocol
 - Secure communication between agents
-- Input validation and sanitization 
+- Input validation and sanitization

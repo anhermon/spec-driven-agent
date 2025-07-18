@@ -319,7 +319,7 @@
                             </div>
                             <p>Phase 3 of 4: Development</p>
                         </div>
-                        
+
                         <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                             <h4>Active Agents</h4>
                             <div class="agent-list">
@@ -389,7 +389,7 @@ POST /api/auth/login
             </div>
             <div class="section-content" id="workflow">
                 <h3>From Idea to Deployed App in 4 Phases</h3>
-                
+
                 <div class="workflow-phase">
                     <div class="phase-header">
                         <div class="phase-number">1</div>
@@ -555,17 +555,17 @@ class DeveloperAgent:
             name="Developer Agent",
             capabilities=["code_generation", "testing", "debugging"]
         )
-    
+
     async def implement_feature(self, user_story):
         # Use A2A SDK to communicate with other agents
         await self.a2a_client.send_message(
             to="architect_agent",
             message={"type": "request_architecture", "story": user_story}
         )
-        
+
         # Use Pydantic AI for validation
         validated_story = await self.validate_story(user_story)
-        
+
         # Generate code following spec
         code = await self.generate_code(validated_story)
         return code
@@ -629,7 +629,7 @@ class DeveloperAgent:
             </div>
             <div class="section-content" id="status">
                 <h3>Current Progress</h3>
-                
+
                 <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
                     <h4>Phase 1: Core Engine (25% Complete)</h4>
                     <div class="progress-bar">
@@ -689,12 +689,12 @@ class DeveloperAgent:
                 <div style="text-align: center; padding: 40px;">
                     <h3>This is what the spec-driven agent workflow will look like</h3>
                     <p style="font-size: 1.1rem; margin: 20px 0;">
-                        A complete system where AI agents collaborate using proven technologies, 
+                        A complete system where AI agents collaborate using proven technologies,
                         following specifications, and giving you full visibility and control.
                     </p>
                     <p style="font-size: 1.1rem; margin: 20px 0;">
-                        <span class="highlight">No more fragmented tools.</span> 
-                        <span class="highlight">No more lost context.</span> 
+                        <span class="highlight">No more fragmented tools.</span>
+                        <span class="highlight">No more lost context.</span>
                         <span class="highlight">Just intelligent, coordinated development.</span>
                     </p>
                     <button class="button" onclick="alert('Implementation ready to begin!')">
@@ -710,7 +710,7 @@ class DeveloperAgent:
             const content = document.getElementById(sectionId);
             const header = content.previousElementSibling;
             const arrow = header.querySelector('span');
-            
+
             if (content.classList.contains('active')) {
                 content.classList.remove('active');
                 arrow.textContent = '▼';
@@ -731,4 +731,4 @@ class DeveloperAgent:
         });
     </script>
 </body>
-</html> 
+</html>

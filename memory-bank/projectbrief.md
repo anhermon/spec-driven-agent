@@ -52,4 +52,4 @@ Implement a comprehensive spec-driven development workflow that combines the bes
 - Support multiple IDE integrations
 - Maintain backward compatibility where possible
 - Follow security best practices for agent communication
-- Leverage existing tools instead of building from scratch 
+- Leverage existing tools instead of building from scratch

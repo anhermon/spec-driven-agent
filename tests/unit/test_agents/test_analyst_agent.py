@@ -2,12 +2,14 @@
 Unit tests for AnalystAgent functionality.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
+
+import pytest
+
 from spec_driven_agent.agents.analyst_agent import AnalystAgent
-from spec_driven_agent.models.task import Task, TaskStatus
 from spec_driven_agent.models.agent import Agent, AgentRole
+from spec_driven_agent.models.task import Task, TaskStatus
 
 
 class TestAnalystAgent:
@@ -63,19 +65,23 @@ class TestAnalystAgent:
         assert "stakeholder_interviews" in analyst_agent.capabilities
 
     @pytest.mark.asyncio
-    async def test_analyst_agent_process_requirements_task(self, analyst_agent, requirements_task):
+    async def test_analyst_agent_process_requirements_task(
+        self, analyst_agent, requirements_task
+    ):
         """Test processing requirements gathering task."""
         result = await analyst_agent.process_task(requirements_task)
-        
+
         assert result.task_id == "task-001"
         assert result.success is True
         assert "Requirements gathered" in result.message
 
     @pytest.mark.asyncio
-    async def test_analyst_agent_process_market_research_task(self, analyst_agent, market_research_task):
+    async def test_analyst_agent_process_market_research_task(
+        self, analyst_agent, market_research_task
+    ):
         """Test processing market research task."""
         result = await analyst_agent.process_task(market_research_task)
-        
+
         assert result.task_id == "task-002"
         assert result.success is True
         assert "Market research" in result.message
@@ -95,27 +101,31 @@ class TestAnalystAgent:
             workflow_id=uuid4(),
             phase="planning",
         )
-        
+
         result = await analyst_agent.process_task(unsupported_task)
-        
+
         assert result.task_id == "task-003"
         assert result.success is True  # Generic analysis handles unsupported tasks
         assert "Analysis completed" in result.message
 
     @pytest.mark.asyncio
-    async def test_analyst_agent_gather_requirements(self, analyst_agent, requirements_task):
+    async def test_analyst_agent_gather_requirements(
+        self, analyst_agent, requirements_task
+    ):
         """Test requirements gathering functionality."""
         result = await analyst_agent._gather_requirements(requirements_task)
-        
+
         assert result.task_id == "task-001"
         assert result.success is True
         assert "Requirements gathered" in result.message
 
     @pytest.mark.asyncio
-    async def test_analyst_agent_conduct_market_research(self, analyst_agent, market_research_task):
+    async def test_analyst_agent_conduct_market_research(
+        self, analyst_agent, market_research_task
+    ):
         """Test market research functionality."""
         result = await analyst_agent._conduct_market_research(market_research_task)
-        
+
         assert result.task_id == "task-002"
         assert result.success is True
         assert "Market research" in result.message
@@ -135,9 +145,9 @@ class TestAnalystAgent:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         result = await analyst_agent._conduct_interview(interview_task)
-        
+
         assert result.task_id == "task-004"
         assert result.success is True
         assert "Stakeholder interviews" in result.message
@@ -169,9 +179,9 @@ class TestAnalystAgent:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         result = await analyst_agent.process_task(empty_context_task)
-        
+
         assert result.task_id == "task-006"
         assert result.success is True
         assert "Requirements gathered" in result.message
@@ -191,9 +201,9 @@ class TestAnalystAgent:
             workflow_id=uuid4(),
             phase="discovery",
         )
-        
+
         result = await analyst_agent.process_task(complex_context_task)
-        
+
         assert result.task_id == "task-007"
         assert result.success is True
-        assert "Requirements gathered" in result.message 
+        assert "Requirements gathered" in result.message
