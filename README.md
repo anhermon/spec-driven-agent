@@ -210,10 +210,12 @@ alembic downgrade -1
 
 ## 📚 Documentation
 
-- [Architecture Guide](docs/architecture.md)
-- [Agent Development Guide](docs/agents.md)
-- [API Reference](docs/api.md)
-- [IDE Integration Guide](docs/ide-integration.md)
+Access the full documentation in the [docs/](docs/) folder. Key entry points:
+
+- [Documentation Index](docs/index.md)
+- [Architecture Overview](docs/architecture/overview.md)
+- [API Reference](docs/api/openapi-guide.md)
+- [Quick-Start Tutorial](docs/tutorials/quickstart.md)
 
 ## 🤝 Contributing
 
