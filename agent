@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+"""
+CLI entry point for the spec-driven agent workflow system.
+"""
+
+import sys
+from spec_driven_agent.cli import app
+
+if __name__ == "__main__":
+    app() 

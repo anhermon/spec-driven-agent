@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spec-Driven Agent Workflow - Interactive Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .section-content {
+            padding: 30px;
+            display: none;
+        }
+
+        .section-content.active {
+            display: block;
+        }
+
+        .workflow-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .user-interface {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .agent-interface {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid #bbdefb;
+        }
+
+        .interface-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #1976d2;
+        }
+
+        .chat-message {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .user-message {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .agent-message {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .system-message {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .workflow-phase {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-phase:hover {
+            border-color: #2196f3;
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .phase-number {
+            background: #2196f3;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .phase-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        .agent-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .agent-tag {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid #c8e6c9;
+        }
+
+        .code-example {
+            background: #263238;
+            color: #eeffff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .tech-item {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .tech-item:hover {
+            border-color: #2196f3;
+            transform: translateY(-2px);
+        }
+
+        .tech-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-waiting {
+            background: #ff9800;
+        }
+
+        .status-complete {
+            background: #2196f3;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .collapsible {
+            cursor: pointer;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.active {
+            max-height: 500px;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Spec-Driven Agent Workflow</h1>
+            <p>See exactly what the end product will look like and how you'll use it</p>
+        </div>
+
+        <!-- What You'll Actually See -->
+        <div class="demo-section">
+            <div class="section-header" onclick="toggleSection('user-experience')">
+                <h2>👀 What You'll Actually See</h2>
+                <span>▼</span>
+            </div>
+            <div class="section-content" id="user-experience">
+                <h3>Your Main Dashboard</h3>
+                <div class="workflow-demo">
+                    <div class="user-interface">
+                        <div class="interface-title">📊 Project Dashboard</div>
+                        <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <h4>Current Project: Task Management App</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%;"></div>
+                            </div>
+                            <p>Phase 3 of 4: Development</p>
+                        </div>
+                        
+                        <div style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+                            <h4>Active Agents</h4>
+                            <div class="agent-list">
+                                <span class="agent-tag"><span class="status-indicator status-active"></span>Scrum Master</span>
+                                <span class="agent-tag"><span class="status-indicator status-active"></span>Developer</span>
+                                <span class="agent-tag"><span class="status-indicator status-waiting"></span>QA</span>
+                            </div>
+                        </div>
+
+                        <div style="background: white; border-radius: 8px; padding: 15px;">
+                            <h4>Recent Activity</h4>
+                            <div class="chat-message system-message">
+                                <strong>System:</strong> Developer Agent completed user authentication module
+                            </div>
+                            <div class="chat-message system-message">
+                                <strong>System:</strong> Scrum Master created 3 new user stories
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="agent-interface">
+                        <div class="interface-title">💬 Agent Communication</div>
+                        <div class="chat-message user-message">
+                            <strong>You:</strong> Can you show me the current API design?
+                        </div>
+                        <div class="chat-message agent-message">
+                            <strong>Architect Agent:</strong> Here's the current API specification:
+                            <div class="code-example">
+POST /api/auth/login
+{
+  "email": "string",
+  "password": "string"
+}
+
+Response: {
+  "token": "string",
+  "user": {
+    "id": "string",
+    "email": "string"
+  }
+}
+                            </div>
+                        </div>
+                        <div class="chat-message user-message">
+                            <strong>You:</strong> Add password validation rules
+                        </div>
+                        <div class="chat-message agent-message">
+                            <strong>Architect Agent:</strong> Updated API spec with password validation:
+                            <div class="code-example">
+POST /api/auth/login
+{
+  "email": "string (required, valid email)",
+  "password": "string (required, min 8 chars, 1 uppercase, 1 number)"
+}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Workflow Walkthrough -->
+        <div class="demo-section">
+            <div class="section-header" onclick="toggleSection('workflow')">
+                <h2>🔄 Complete Workflow Walkthrough</h2>
+                <span>▼</span>
+            </div>
+            <div class="section-content" id="workflow">
+                <h3>From Idea to Deployed App in 4 Phases</h3>
+                
+                <div class="workflow-phase">
+                    <div class="phase-header">
+                        <div class="phase-number">1</div>
+                        <div class="phase-title">Discovery & Planning</div>
+                    </div>
+                    <div class="agent-list">
+                        <span class="agent-tag">Analyst Agent</span>
+                        <span class="agent-tag">PM Agent</span>
+                    </div>
+                    <p><strong>What happens:</strong></p>
+                    <ul>
+                        <li>You describe your idea: "I need a task management app for my team"</li>
+                        <li>Analyst Agent interviews you about requirements, users, constraints</li>
+                        <li>PM Agent creates a detailed Product Requirements Document (PRD)</li>
+                        <li>You review and approve the requirements</li>
+                    </ul>
+                    <div class="chat-message agent-message">
+                        <strong>Analyst Agent:</strong> Based on our discussion, here are the key requirements:
+                        <ul>
+                            <li>User authentication and team management</li>
+                            <li>Task creation, assignment, and status tracking</li>
+                            <li>Real-time notifications and collaboration</li>
+                            <li>Mobile-responsive web interface</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="workflow-phase">
+                    <div class="phase-header">
+                        <div class="phase-number">2</div>
+                        <div class="phase-title">Architecture & Design</div>
+                    </div>
+                    <div class="agent-list">
+                        <span class="agent-tag">Architect Agent</span>
+                    </div>
+                    <p><strong>What happens:</strong></p>
+                    <ul>
+                        <li>Architect Agent analyzes requirements and proposes system design</li>
+                        <li>Creates API specifications, database schema, and technology choices</li>
+                        <li>You review the architecture and can ask questions or request changes</li>
+                        <li>Once approved, design becomes the "source of truth" for development</li>
+                    </ul>
+                    <div class="chat-message agent-message">
+                        <strong>Architect Agent:</strong> I recommend this architecture:
+                        <div class="code-example">
+Frontend: React + TypeScript
+Backend: FastAPI + Python
+Database: PostgreSQL
+Authentication: JWT tokens
+Real-time: WebSocket connections
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-phase">
+                    <div class="phase-header">
+                        <div class="phase-number">3</div>
+                        <div class="phase-title">Development</div>
+                    </div>
+                    <div class="agent-list">
+                        <span class="agent-tag">Scrum Master Agent</span>
+                        <span class="agent-tag">Developer Agent</span>
+                    </div>
+                    <p><strong>What happens:</strong></p>
+                    <ul>
+                        <li>Scrum Master breaks down the work into user stories and tasks</li>
+                        <li>Developer Agent writes code following the approved architecture</li>
+                        <li>You see real-time progress and can review code as it's written</li>
+                        <li>Agents communicate using A2A SDK for seamless handoffs</li>
+                    </ul>
+                    <div class="chat-message agent-message">
+                        <strong>Developer Agent:</strong> Implementing user authentication module:
+                        <div class="code-example">
+@app.post("/auth/login")
+async def login(credentials: LoginCredentials):
+    user = await authenticate_user(credentials)
+    token = create_jwt_token(user.id)
+    return {"token": token, "user": user}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="workflow-phase">
+                    <div class="phase-header">
+                        <div class="phase-number">4</div>
+                        <div class="phase-title">Testing & Deployment</div>
+                    </div>
+                    <div class="agent-list">
+                        <span class="agent-tag">QA Agent</span>
+                        <span class="agent-tag">UX Expert Agent</span>
+                        <span class="agent-tag">Product Owner Agent</span>
+                    </div>
+                    <p><strong>What happens:</strong></p>
+                    <ul>
+                        <li>QA Agent runs comprehensive tests (unit, integration, end-to-end)</li>
+                        <li>UX Expert Agent validates user experience and accessibility</li>
+                        <li>Product Owner Agent ensures everything meets original requirements</li>
+                        <li>You review test results and approve for deployment</li>
+                    </ul>
+                    <div class="chat-message agent-message">
+                        <strong>QA Agent:</strong> Test results:
+                        <ul>
+                            <li>✅ Unit tests: 95% coverage</li>
+                            <li>✅ Integration tests: All passing</li>
+                            <li>✅ E2E tests: User flows working</li>
+                            <li>⚠️ Performance: Loading time 2.3s (target: <2s)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="demo-section">
+            <div class="section-header" onclick="toggleSection('tech-stack')">
+                <h2>⚙️ Technology Stack</h2>
+                <span>▼</span>
+            </div>
+            <div class="section-content" id="tech-stack">
+                <h3>Built on Proven Technologies</h3>
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="tech-icon">🐍</div>
+                        <h4>Python</h4>
+                        <p>Core orchestration and AI agent logic</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🚀</div>
+                        <h4>FastAPI</h4>
+                        <p>High-performance web framework for APIs</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🤖</div>
+                        <h4>A2A SDK</h4>
+                        <p>Agent-to-agent communication protocol</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🔍</div>
+                        <h4>Pydantic AI</h4>
+                        <p>AI-powered data validation and processing</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🗄️</div>
+                        <h4>PostgreSQL</h4>
+                        <p>Reliable database for project data</p>
+                    </div>
+                    <div class="tech-item">
+                        <div class="tech-icon">🧠</div>
+                        <h4>Vector DB</h4>
+                        <p>Semantic search for context management</p>
+                    </div>
+                </div>
+
+                <h3>How It All Works Together</h3>
+                <div class="code-example">
+# Agent communication using A2A SDK
+from a2a_sdk import A2AClient, AgentCard
+
+class DeveloperAgent:
+    def __init__(self):
+        self.a2a_client = A2AClient()
+        self.agent_card = AgentCard(
+            name="Developer Agent",
+            capabilities=["code_generation", "testing", "debugging"]
+        )
+    
+    async def implement_feature(self, user_story):
+        # Use A2A SDK to communicate with other agents
+        await self.a2a_client.send_message(
+            to="architect_agent",
+            message={"type": "request_architecture", "story": user_story}
+        )
+        
+        # Use Pydantic AI for validation
+        validated_story = await self.validate_story(user_story)
+        
+        # Generate code following spec
+        code = await self.generate_code(validated_story)
+        return code
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Features -->
+        <div class="demo-section">
+            <div class="section-header" onclick="toggleSection('features')">
+                <h2>✨ Key Features</h2>
+                <span>▼</span>
+            </div>
+            <div class="section-content" id="features">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                    <div>
+                        <h3>🎯 Spec-Driven Development</h3>
+                        <ul>
+                            <li><strong>Design First:</strong> Architecture and APIs defined before coding</li>
+                            <li><strong>Consistency:</strong> All code follows approved specifications</li>
+                            <li><strong>Quality:</strong> Built-in validation at every step</li>
+                            <li><strong>Documentation:</strong> Auto-generated from specifications</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>🤖 Intelligent Agents</h3>
+                        <ul>
+                            <li><strong>Specialized Roles:</strong> Each agent has specific expertise</li>
+                            <li><strong>Collaboration:</strong> Agents work together using A2A SDK</li>
+                            <li><strong>Learning:</strong> Agents improve with each project</li>
+                            <li><strong>Transparency:</strong> See exactly what each agent is doing</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>🧠 Rich Context</h3>
+                        <ul>
+                            <li><strong>Memory:</strong> Context persists across all phases</li>
+                            <li><strong>Semantic Search:</strong> Find relevant information instantly</li>
+                            <li><strong>Symbolic Reasoning:</strong> Complex problem-solving capabilities</li>
+                            <li><strong>Adaptation:</strong> Context evolves with project needs</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>👤 User Control</h3>
+                        <ul>
+                            <li><strong>Visibility:</strong> See everything happening in real-time</li>
+                            <li><strong>Approval:</strong> Approve or reject agent decisions</li>
+                            <li><strong>Guidance:</strong> Provide feedback and direction</li>
+                            <li><strong>Override:</strong> Take control when needed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Status -->
+        <div class="demo-section">
+            <div class="section-header" onclick="toggleSection('status')">
+                <h2>📊 Implementation Status</h2>
+                <span>▼</span>
+            </div>
+            <div class="section-content" id="status">
+                <h3>Current Progress</h3>
+                
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <h4>Phase 1: Core Engine (25% Complete)</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 25%;"></div>
+                    </div>
+                    <ul>
+                        <li>✅ Project structure and dependencies</li>
+                        <li>✅ A2A SDK integration setup</li>
+                        <li>🔄 Pydantic AI integration</li>
+                        <li>⏳ Context engine development</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <h4>Phase 2: Agent Implementation (0% Complete)</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <ul>
+                        <li>⏳ Analyst Agent</li>
+                        <li>⏳ PM Agent</li>
+                        <li>⏳ Architect Agent</li>
+                        <li>⏳ Other specialized agents</li>
+                    </ul>
+                </div>
+
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <h4>Phase 3: User Interface (0% Complete)</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <ul>
+                        <li>⏳ Web dashboard</li>
+                        <li>⏳ Agent communication interface</li>
+                        <li>⏳ Progress tracking</li>
+                        <li>⏳ Decision points</li>
+                    </ul>
+                </div>
+
+                <h3>Next Steps</h3>
+                <ol>
+                    <li><strong>Complete A2A SDK Integration:</strong> Set up agent communication infrastructure</li>
+                    <li><strong>Build Context Engine:</strong> Implement rich context management with symbolic mechanisms</li>
+                    <li><strong>Create First Agent:</strong> Implement Analyst Agent with requirements gathering</li>
+                    <li><strong>Develop User Interface:</strong> Build the web dashboard for user interaction</li>
+                    <li><strong>Test and Iterate:</strong> Validate the workflow with real projects</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="demo-section">
+            <div class="section-header">
+                <h2>🚀 Ready to Build the Future?</h2>
+            </div>
+            <div class="section-content active">
+                <div style="text-align: center; padding: 40px;">
+                    <h3>This is what the spec-driven agent workflow will look like</h3>
+                    <p style="font-size: 1.1rem; margin: 20px 0;">
+                        A complete system where AI agents collaborate using proven technologies, 
+                        following specifications, and giving you full visibility and control.
+                    </p>
+                    <p style="font-size: 1.1rem; margin: 20px 0;">
+                        <span class="highlight">No more fragmented tools.</span> 
+                        <span class="highlight">No more lost context.</span> 
+                        <span class="highlight">Just intelligent, coordinated development.</span>
+                    </p>
+                    <button class="button" onclick="alert('Implementation ready to begin!')">
+                        Start Building
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const header = content.previousElementSibling;
+            const arrow = header.querySelector('span');
+            
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                arrow.textContent = '▼';
+            } else {
+                content.classList.add('active');
+                arrow.textContent = '▲';
+            }
+        }
+
+        // Auto-expand first section
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstSection = document.querySelector('.section-content');
+            if (firstSection) {
+                firstSection.classList.add('active');
+                const arrow = firstSection.previousElementSibling.querySelector('span');
+                arrow.textContent = '▲';
+            }
+        });
+    </script>
+</body>
+</html> 

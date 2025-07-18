@@ -1,0 +1,51 @@
+"""
+Base models and common functionality for the spec-driven agent workflow system.
+"""
+
+from datetime import datetime
+from typing import Any, Dict, Optional
+from uuid import UUID, uuid4
+
+from pydantic import BaseModel as PydanticBaseModel, Field, ConfigDict
+
+
+class BaseModel(PydanticBaseModel):
+    """Base model with common configuration and fields."""
+    
+    model_config = ConfigDict(
+        validate_assignment=True,
+        arbitrary_types_allowed=True,
+        json_encoders={
+            datetime: lambda v: v.isoformat(),
+            UUID: lambda v: str(v),
+        },
+    )
+
+
+class TimestampedModel(BaseModel):
+    """Base model with timestamp fields."""
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class IdentifiableModel(TimestampedModel):
+    """Base model with ID field."""
+    
+    id: UUID = Field(default_factory=uuid4)
+
+
+class MetadataModel(IdentifiableModel):
+    """Base model with metadata fields."""
+    
+    name: str = Field(..., description="Human-readable name")
+    description: Optional[str] = Field(None, description="Detailed description")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+
+class StatusModel(MetadataModel):
+    """Base model with status tracking."""
+    
+    status: str = Field(..., description="Current status")
+    status_updated_at: datetime = Field(default_factory=datetime.utcnow)
+    status_reason: Optional[str] = Field(None, description="Reason for status change") 
