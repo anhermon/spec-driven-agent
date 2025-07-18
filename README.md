@@ -83,7 +83,7 @@ This system implements an intelligent agent-based workflow where specialized AI 
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:anhermon/spec-driven-agent.git
    cd spec-driven-agent
    ```
 
@@ -230,8 +230,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- **Issues**: [GitHub Issues](https://github.com/anhermon/spec-driven-agent/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/anhermon/spec-driven-agent/discussions)
 
 ## 🗺️ Roadmap
 
